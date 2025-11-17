@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To My Princess: Our Royal Album</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Great+Vibes&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --bg-dark: #07010a; /* Very dark purple-ish */
+            --accent-pink: #ff0a54; /* Deep Neon Pink */
+            --accent-gold: #ffd700;
+            --text-light: #f0e6f2;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Playfair Display', serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- Canvas for Particles --- */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* --- Reveal Curtain --- */
+        #curtain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #000, #1a011a);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .slide-up { transform: translateY(-100%); }
+
+        .reveal-button {
+            padding: 18px 45px;
+            font-size: 1.6rem;
+            background: linear-gradient(45deg, var(--accent-gold), var(--accent-pink));
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .reveal-button:hover {
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.8), 0 0 20px var(--accent-pink);
+            transform: scale(1.05);
+        }
+
+        /* --- Main Content Styling --- */
+        .content-wrapper {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.5s ease 1s, transform 1.5s ease 1s;
+            padding: 4rem 2rem;
+        }
+
+        .content-wrapper.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        header h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 5rem;
+            color: var(--accent-pink);
+            text-shadow: 0 0 20px var(--accent-pink);
+            margin-bottom: 1rem;
+        }
+
+        header p {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            opacity: 0.8;
+        }
+
+        /* --- Sections --- */
+        section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 6rem;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.8rem;
+            color: var(--accent-gold);
+            text-shadow: 0 0 15px var(--accent-gold);
+            margin-bottom: 2.5rem;
+            text-align: center;
+            max-width: 800px;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+
+        .section-title.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Photo Card Styling --- */
+        .photo-card {
+            width: 100%;
+            max-width: 700px; /* Wider for more impact */
+            height: 450px; /* Adjusted height */
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 25px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+
+        .photo-card.visible {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 25px;
+            transition: transform 0.4s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.05); /* Slight zoom on hover */
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 2rem 1.5rem;
+            color: var(--text-light);
+            text-align: left;
+            transform: translateY(100%);
+            transition: transform 0.4s ease;
+        }
+
+        .photo-card:hover .card-overlay {
+            transform: translateY(0);
+        }
+
+        .card-overlay h3 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.5rem;
+            color: var(--accent-pink);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-overlay p {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* --- Scroll Indicator --- */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            color: var(--accent-gold);
+            font-size: 2.5rem;
+            animation: bounce 2s infinite;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            opacity: 0.7;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* --- Animations --- */
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-15px); }
+            60% { transform: translateY(-7px); }
+        }
+
+        /* --- Particle Animation --- */
+        .particle {
+            position: absolute;
+            background-color: var(--accent-pink);
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatAndFade 5s ease-out infinite;
+            filter: blur(0.5px);
+        }
+
+        @keyframes floatAndFade {
+            0% { transform: translateY(0) translateX(0) scale(0); opacity: 0; }
+            10% { opacity: 0.7; }
+            100% { transform: translateY(-100vh) translateX(var(--float-x, 0px)) scale(1.5); opacity: 0; }
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 768px) {
+            header h1 { font-size: 3.5rem; }
+            header p { font-size: 1rem; letter-spacing: 3px; }
+            .section-title { font-size: 2rem; }
+            .photo-card { height: 350px; }
+            .reveal-button { font-size: 1.2rem; padding: 12px 30px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="curtain">
+        <button class="reveal-button" onclick="revealContent()">Unveil Our Journey</button>
+    </div>
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="content-wrapper" id="main-content">
+        <header>
+            <h1>My Beautiful Princess</h1>
+            <p>A Tapestry of Our Love</p>
+        </header>
+
+        <section id="photo1">
+            <h2 class="section-title observe-me">Her Majesty's Gaze</h2>
+            <div class="photo-card observe-me" style="transition-delay: 0.2s;">
+                <img src="love2.jpg" alt="Her Majesty's Gaze">
+                <div class="card-overlay">
+                    <h3>The Sparkle in Her Eyes</h3>
+                    <p>That moment when your eyes met mine and the world stood still. Every glance is a blessing.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="photo2">
+            <h2 class="section-title observe-me">Whispers of Our Journey</h2>
+            <div class="photo-card observe-me" style="transition-delay: 0.2s;">
+                <img src="love3.jpg" alt="Whispers of Our Journey">
+                <div class="card-overlay">
+                    <h3>Adventures We Shared</h3>
+                    <p>From quiet evenings to grand escapades, every step with you is an adventure I cherish.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="photo3">
+            <h2 class="section-title observe-me">The Warmth of Her Embrace</h2>
+            <div class="photo-card observe-me" style="transition-delay: 0.2s;">
+                <img src="love4.jpg" alt="The Warmth of Her Embrace">
+                <div class="card-overlay">
+                    <h3>My Comfort, My Home</h3>
+                    <p>In your arms, I find solace and strength. You are my safe harbor, my forever home.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="photo4">
+            <h2 class="section-title observe-me">Moments of Pure Joy</h2>
+            <div class="photo-card observe-me" style="transition-delay: 0.2s;">
+                <img src="love5.jpg" alt="Moments of Pure Joy">
+                <div class="card-overlay">
+                    <h3>Laughter, Love, and Light</h3>
+                    <p>Your laughter is music to my ears, and your joy illuminates even the darkest days.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="photo5">
+            <h2 class="section-title observe-me">Our Everlasting Fairytale</h2>
+            <div class="photo-card observe-me" style="transition-delay: 0.2s;">
+                <img src="https://images.unsplash.com/photo-1518568814500-bf0f8d125f46?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80" alt="Our Everlasting Fairytale">
+                <div class="card-overlay">
+                    <h3>A Love Story Unfolding</h3>
+                    <p>With every passing day, our fairytale writes a new chapter, more beautiful than the last.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>Crafted with endless love and devotion by your shubham for her madam ji.</p>
+        </footer>
+    </div>
+
+    <script>
+        // --- REVEAL MECHANISM ---
+        function revealContent() {
+            document.getElementById('curtain').classList.add('slide-up');
+            document.getElementById('main-content').classList.add('visible');
+            // Start particle generation after content is revealed
+            startParticleGeneration();
+        }
+
+        // --- PARTICLE EFFECT (Floating Stars/Hearts) ---
+        const particleCanvas = document.getElementById('particle-canvas');
+        const particleCtx = particleCanvas.getContext('2d');
+        let particles = [];
+        let animationFrameId;
+
+        function resizeCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, size, color, speedY, floatX) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.color = color;
+                this.speedY = speedY;
+                this.floatX = floatX; // Horizontal float variation
+                this.initialX = x;
+                this.opacity = 0;
+            }
+
+            draw() {
+                particleCtx.beginPath();
+                particleCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                particleCtx.fillStyle = `rgba(255, 10, 84, ${this.opacity})`; /* Neon Pink */
+                particleCtx.shadowColor = `rgba(255, 10, 84, ${this.opacity})`;
+                particleCtx.shadowBlur = this.size / 2;
+                particleCtx.fill();
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.x = this.initialX + Math.sin(this.y * 0.005) * this.floatX;
+
+                // Fade in and out
+                if (this.y > particleCanvas.height * 0.7) {
+                    this.opacity = (particleCanvas.height - this.y) / (particleCanvas.height * 0.3);
+                } else if (this.y < particleCanvas.height * 0.3) {
+                    this.opacity = this.y / (particleCanvas.height * 0.3);
+                } else {
+                    this.opacity = 1;
+                }
+
+                if (this.y < 0 - this.size) {
+                    this.y = particleCanvas.height + this.size;
+                    this.x = Math.random() * particleCanvas.width;
+                    this.initialX = this.x; // Reset initialX for new path
+                    this.speedY = Math.random() * 0.5 + 0.2;
+                    this.floatX = Math.random() * 20 + 10;
+                    this.size = Math.random() * 2 + 1;
+                }
+                this.draw();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const numberOfParticles = (particleCanvas.width * particleCanvas.height) / 10000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                const x = Math.random() * particleCanvas.width;
+                const y = Math.random() * particleCanvas.height;
+                const size = Math.random() * 2 + 1;
+                const speedY = Math.random() * 0.5 + 0.2;
+                const floatX = Math.random() * 20 + 10;
+                particles.push(new Particle(x, y, size, 'transparent', speedY, floatX));
+            }
+        }
+
+        function animateParticles() {
+            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+            }
+            animationFrameId = requestAnimationFrame(animateParticles);
+        }
+
+        function startParticleGeneration() {
+            resizeCanvas();
+            initParticles();
+            if (animationFrameId) cancelAnimationFrame(animationFrameId); // Clear any previous animation
+            animateParticles();
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                initParticles();
+            });
+        }
+
+        // --- INTERSECTION OBSERVER FOR FADE-IN EFFECTS ---
+        const observerOptions = {
+            threshold: 0.1 // Trigger when 10% of the element is visible
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    // Optional: Unobserve after it becomes visible if you only want it to animate once
+                    // observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Attach observer to all elements with 'observe-me' class
+        document.querySelectorAll('.observe-me').forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
